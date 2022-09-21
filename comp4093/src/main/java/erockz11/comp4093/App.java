@@ -211,6 +211,8 @@ public class App {
 
     	Point point = new Point(x, y);
     	circle(img, point, 100, new Scalar(0, 0, 255, 255), 25, 8, 0);
+    	
+    	point.deallocate();
     }
 
 }
