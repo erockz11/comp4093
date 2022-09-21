@@ -9,7 +9,8 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-
+import org.bytedeco.javacpp.opencv_core.Point;
+import org.bytedeco.javacpp.opencv_core.Scalar;
 import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
 import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -20,14 +21,18 @@ import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 import static org.bytedeco.javacpp.opencv_core.bitwise_and;
+import static org.bytedeco.javacpp.opencv_imgproc.circle;
 
 
 public class App {
 
 	private static final ToIplImage converter = new ToIplImage();
+	
+	static int xCoord = 100;
+	static int yCoord = 100;
 
     public static void main( String[] args ) throws IOException {
-
+    	
     	// Load image
     	BufferedImage src = ImageIO.read(new File("resources/images/img8.jpg"));
     	// Convert BufferedImage to Mat
@@ -44,12 +49,18 @@ public class App {
     	Mat hsvMat = new Mat();
     	cvtColor(rgbMat, hsvMat, opencv_imgproc.COLOR_RGB2HSV);
 
-    	//HSV Frame
+    	// HSV Frame
     	CanvasFrame hsvFrame = new CanvasFrame("hsv");
     	hsvFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
     	hsvFrame.setCanvasScale(0.17);
     	hsvFrame.setLocation(640, 0);
     	hsvFrame.showImage(converter.convert(hsvMat));
+    	
+    	// Result Frame
+    	CanvasFrame resultFrame = new CanvasFrame("result");
+    	resultFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+    	resultFrame.setCanvasScale(0.17);
+    	resultFrame.setLocation(1280, 0);
 
     	// Convert to IplImage
     	IplImage rgbIpl = new IplImage(rgbMat);
@@ -143,7 +154,7 @@ public class App {
     	// Buttons
     	JFrame buttonFrame = new JFrame("buttons");
     	buttonFrame.setSize(300, 300);
-    	buttonFrame.setLocation(1280, 150);
+    	buttonFrame.setLocation(1920, 150);
 
     	final JLabel xLabel = new JLabel();
     	xLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -153,8 +164,8 @@ public class App {
     	yLabel.setHorizontalAlignment(JLabel.CENTER);
     	yLabel.setBounds(0, 20, 250, 100);
 
-    	SpinnerModel xVal = new SpinnerNumberModel(5, 0, src.getWidth(), 1);
-    	JSpinner xSpin = new JSpinner(xVal);
+    	SpinnerModel xVal = new SpinnerNumberModel(xCoord, 0, src.getWidth(), 10);
+    	final JSpinner xSpin = new JSpinner(xVal);
     	xLabel.setText("x : " + xSpin.getValue());
     	xSpin.setBounds(100, 100, 50, 30);
     	buttonFrame.add(xSpin);
@@ -162,11 +173,13 @@ public class App {
     	xSpin.addChangeListener(new ChangeListener() {
     		public void stateChanged(ChangeEvent e) {
     			xLabel.setText("x : " + ((JSpinner)e.getSource()).getValue());
+    			xCoord = (Integer) xSpin.getValue();
+    			System.out.println("x = " + xCoord);
     		}
     	});
     	
-    	SpinnerModel yVal = new SpinnerNumberModel(5, 0, src.getHeight(), 1);
-    	JSpinner ySpin = new JSpinner(yVal);
+    	SpinnerModel yVal = new SpinnerNumberModel(yCoord, 0, src.getHeight(), 10);
+    	final JSpinner ySpin = new JSpinner(yVal);
     	yLabel.setText("y : " + xSpin.getValue());
     	ySpin.setBounds(100, 150, 50, 30);
     	buttonFrame.add(ySpin);
@@ -174,6 +187,8 @@ public class App {
     	ySpin.addChangeListener(new ChangeListener() {
     		public void stateChanged(ChangeEvent e) {
     			yLabel.setText("y : " + ((JSpinner)e.getSource()).getValue());
+    			yCoord = (Integer) ySpin.getValue();
+    			System.out.println("y = " + yCoord);
     		}
     	});
     	
@@ -182,13 +197,18 @@ public class App {
     	
     	// Main Loop
     	while(true) {
+    		Mat resultImage = new Mat(rgbMat.clone());
+    		drawSourceCircle(resultImage, xCoord, yCoord);
+    		resultFrame.showImage(converter.convert(resultImage));
     		
     	}
     	
     }
     
-    static void drawSourceCircle(int x, int y) {
+    static void drawSourceCircle(Mat img, int x, int y) {
     	
+    	Point point = new Point(x, y);
+    	circle(img, point, 100, new Scalar(0, 0, 255, 255), 25, 8, 0);
     }
 
 }
