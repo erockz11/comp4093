@@ -34,7 +34,7 @@ public class App {
     public static void main( String[] args ) throws IOException {
 
     	// Load image
-    	BufferedImage src = ImageIO.read(new File("resources/images/img8.jpg"));
+    	BufferedImage src = ImageIO.read(new File("resources/images/img14.jpg"));
     	// Convert BufferedImage to Mat
     	Mat rgbMat = Java2DFrameUtils.toMat(src);
 
@@ -82,8 +82,8 @@ public class App {
 
     	IplImage rgbThresholdIpl = IplImage.create(rgbIpl.width(), rgbIpl.height(), rgbIpl.depth(), CV_8UC1);
     	IplImage hsvThresholdIpl = IplImage.create(hsvIpl.width(), hsvIpl.height(), hsvIpl.depth(), CV_8UC1);
-    	opencv_core.cvInRangeS(rgbIpl, opencv_core.cvScalar(20, 80, 80, 0), opencv_core.cvScalar(255, 255, 200, 0), rgbThresholdIpl);
-    	opencv_core.cvInRangeS(hsvIpl, opencv_core.cvScalar(20, 80, 80, 0), opencv_core.cvScalar(255, 255, 255, 0), hsvThresholdIpl);
+    	opencv_core.cvInRangeS(rgbIpl, opencv_core.cvScalar(40, 80, 50, 255), opencv_core.cvScalar(150, 240, 255, 255), rgbThresholdIpl);
+    	opencv_core.cvInRangeS(hsvIpl, opencv_core.cvScalar(20, 80, 80, 0), opencv_core.cvScalar(180, 255, 255, 0), hsvThresholdIpl);
 
     	// Apply smoothing
 
@@ -202,6 +202,7 @@ public class App {
     		Mat resultImage = new Mat(rgbMat.clone());
     		drawSourceCircle(resultImage, xCoord, yCoord);
     		resultFrame.showImage(converter.convert(resultImage));
+    		resultImage._deallocate();
 
     	}
 
