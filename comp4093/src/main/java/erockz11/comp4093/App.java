@@ -27,12 +27,12 @@ import static org.bytedeco.javacpp.opencv_imgproc.circle;
 public class App {
 
 	private static final ToIplImage converter = new ToIplImage();
-	
+
 	static int xCoord = 100;
 	static int yCoord = 100;
 
     public static void main( String[] args ) throws IOException {
-    	
+
     	// Load image
     	BufferedImage src = ImageIO.read(new File("resources/images/img8.jpg"));
     	// Convert BufferedImage to Mat
@@ -55,7 +55,7 @@ public class App {
     	hsvFrame.setCanvasScale(0.17);
     	hsvFrame.setLocation(640, 0);
     	hsvFrame.showImage(converter.convert(hsvMat));
-    	
+
     	// Result Frame
     	CanvasFrame resultFrame = new CanvasFrame("result");
     	resultFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
@@ -151,7 +151,7 @@ public class App {
     	combinedThreshFrame.setLocation(1280, 500);
     	combinedThreshFrame.showImage(converter.convert(combinedThreshold));
 
-    	// Buttons
+    	// Buttons and Labels
     	JFrame buttonFrame = new JFrame("buttons");
     	buttonFrame.setSize(300, 300);
     	buttonFrame.setLocation(1920, 150);
@@ -159,7 +159,7 @@ public class App {
     	final JLabel xLabel = new JLabel();
     	xLabel.setHorizontalAlignment(JLabel.CENTER);
     	xLabel.setBounds(0, 0, 250, 100);
-    	
+
     	final JLabel yLabel = new JLabel();
     	yLabel.setHorizontalAlignment(JLabel.CENTER);
     	yLabel.setBounds(0, 20, 250, 100);
@@ -177,7 +177,7 @@ public class App {
     			System.out.println("x = " + xCoord);
     		}
     	});
-    	
+
     	SpinnerModel yVal = new SpinnerNumberModel(yCoord, 0, src.getHeight(), 10);
     	final JSpinner ySpin = new JSpinner(yVal);
     	yLabel.setText("y : " + xSpin.getValue());
@@ -191,22 +191,24 @@ public class App {
     			System.out.println("y = " + yCoord);
     		}
     	});
-    	
+
     	buttonFrame.setLayout(null);
     	buttonFrame.setVisible(true);
-    	
+
     	// Main Loop
     	while(true) {
+
+    		// Redraw result image and frame
     		Mat resultImage = new Mat(rgbMat.clone());
     		drawSourceCircle(resultImage, xCoord, yCoord);
     		resultFrame.showImage(converter.convert(resultImage));
-    		
+
     	}
-    	
+
     }
-    
+
     static void drawSourceCircle(Mat img, int x, int y) {
-    	
+
     	Point point = new Point(x, y);
     	circle(img, point, 100, new Scalar(0, 0, 255, 255), 25, 8, 0);
     }
