@@ -32,6 +32,10 @@ public class App {
 	static int yCoord = 100;
 
     public static void main( String[] args ) throws IOException {
+    	
+    	// Preparations
+    	System.setProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
+        System.setProperty("org.bytedeco.javacpp.maxbytes", "0");
 
     	// Load image
     	BufferedImage src = ImageIO.read(new File("resources/images/img14.jpg"));
@@ -199,10 +203,10 @@ public class App {
     	while(true) {
 
     		// Redraw result image and frame
-    		Mat resultImage = new Mat(rgbMat.clone());
+    		Mat resultImage = new Mat();
+    		resultImage = rgbMat.clone();
     		drawSourceCircle(resultImage, xCoord, yCoord);
     		resultFrame.showImage(converter.convert(resultImage));
-    		resultImage._deallocate();
 
     	}
 
