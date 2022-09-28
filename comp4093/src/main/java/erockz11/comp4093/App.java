@@ -14,6 +14,7 @@ import org.bytedeco.javacpp.opencv_core.Scalar;
 import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
 import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgproc;
 import org.bytedeco.javacv.CanvasFrame;
@@ -204,12 +205,13 @@ public class App {
 
     		// Redraw result image and frame
     		Mat resultImage = new Mat();
-    		resultImage = rgbMat.clone();
+    		rgbMat.copyTo(resultImage);
     		drawSourceCircle(resultImage, xCoord, yCoord);
     		resultFrame.showImage(converter.convert(resultImage));
-
+    		
+    		resultImage.release();
     	}
-
+    	
     }
 
     static void drawSourceCircle(Mat img, int x, int y) {
@@ -217,7 +219,6 @@ public class App {
     	Point point = new Point(x, y);
     	circle(img, point, 100, new Scalar(0, 0, 255, 255), 25, 8, 0);
     	
-    	point.deallocate();
     }
 
 }
