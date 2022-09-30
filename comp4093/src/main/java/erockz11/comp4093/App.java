@@ -1,20 +1,18 @@
 package erockz11.comp4093;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import org.bytedeco.javacpp.opencv_core.Point;
 import org.bytedeco.javacpp.opencv_core.Scalar;
+import org.bytedeco.javacpp.opencv_core.Size;
+
 import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
 import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacpp.opencv_core.Mat;
-import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgproc;
 import org.bytedeco.javacv.CanvasFrame;
@@ -22,7 +20,9 @@ import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 import static org.bytedeco.javacpp.opencv_core.bitwise_and;
+import static org.bytedeco.javacpp.opencv_imgproc.GaussianBlur;
 import static org.bytedeco.javacpp.opencv_imgproc.circle;
+import static org.bytedeco.javacpp.opencv_imgproc.cvSmooth;
 
 
 public class App {
@@ -87,18 +87,24 @@ public class App {
 
     	IplImage rgbThresholdIpl = IplImage.create(rgbIpl.width(), rgbIpl.height(), rgbIpl.depth(), CV_8UC1);
     	IplImage hsvThresholdIpl = IplImage.create(hsvIpl.width(), hsvIpl.height(), hsvIpl.depth(), CV_8UC1);
-    	opencv_core.cvInRangeS(rgbIpl, opencv_core.cvScalar(40, 80, 50, 255), opencv_core.cvScalar(150, 240, 255, 255), rgbThresholdIpl);
-    	opencv_core.cvInRangeS(hsvIpl, opencv_core.cvScalar(20, 80, 80, 0), opencv_core.cvScalar(180, 255, 255, 0), hsvThresholdIpl);
+    	// RGB
+    	opencv_core.cvInRangeS(rgbIpl, opencv_core.cvScalar(40, 80, 50, 0), opencv_core.cvScalar(150, 240, 255, 0), rgbThresholdIpl);
+    	// HSV
+    	opencv_core.cvInRangeS(hsvIpl, opencv_core.cvScalar(20, 25, 100, 0), opencv_core.cvScalar(86, 255, 255, 0), hsvThresholdIpl);
 
-    	// Apply smoothing
-
-
-
-    	// Combine Images (bitwise AND)
-    	Mat combinedThreshold = new Mat();
+    	// Convert to Mat
     	Mat rgbThresholdMat = opencv_core.cvarrToMat(rgbThresholdIpl);
     	Mat hsvThresholdMat = opencv_core.cvarrToMat(hsvThresholdIpl);
-    	bitwise_and(rgbThresholdMat, hsvThresholdMat, combinedThreshold);
+    	
+    	// Apply Smoothing to Binary Images
+    	GaussianBlur(rgbThresholdMat, rgbThresholdMat, new Size(5, 5), 0);
+    	GaussianBlur(hsvThresholdMat, hsvThresholdMat, new Size(5, 5), 0);
+    	cvSmooth(rgbThresholdIpl, rgbThresholdIpl);
+    	cvSmooth(hsvThresholdIpl, hsvThresholdIpl);
+    	
+    	// Combine Images (bitwise AND)
+    	Mat combinedThreshold = new Mat();
+    	bitwise_and(rgbThresholdMat, hsvThresholdMat, combinedThreshold);   	
 
     	// HSV Channel Frames
 //    	CanvasFrame hueFrame = new CanvasFrame("hue");
