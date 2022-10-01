@@ -11,18 +11,24 @@ import org.bytedeco.javacpp.opencv_core.Scalar;
 import org.bytedeco.javacpp.opencv_core.Size;
 
 import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
+
+import org.bytedeco.javacpp.opencv_core.CvMemStorage;
+import org.bytedeco.javacpp.opencv_core.CvSeq;
 import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.MatVector;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgproc;
 import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
-import static org.bytedeco.javacpp.opencv_core.bitwise_and;
+//import static org.bytedeco.javacpp.opencv_core.bitwise_and;
 import static org.bytedeco.javacpp.opencv_imgproc.GaussianBlur;
 import static org.bytedeco.javacpp.opencv_imgproc.circle;
-import static org.bytedeco.javacpp.opencv_imgproc.cvSmooth;
+import static org.bytedeco.javacpp.opencv_imgproc.CV_CHAIN_APPROX_SIMPLE;
+import static org.bytedeco.javacpp.opencv_imgproc.*;
+import static org.bytedeco.javacpp.opencv_imgproc.Canny;
 
 
 public class App {
@@ -33,13 +39,13 @@ public class App {
 	static int yCoord = 100;
 
     public static void main( String[] args ) throws IOException {
-    	
+
     	// Preparations
     	System.setProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
         System.setProperty("org.bytedeco.javacpp.maxbytes", "0");
 
     	// Load image
-    	BufferedImage src = ImageIO.read(new File("resources/images/img14.jpg"));
+    	BufferedImage src = ImageIO.read(new File("resources/images/img10.jpg"));
     	// Convert BufferedImage to Mat
     	Mat rgbMat = Java2DFrameUtils.toMat(src);
 
@@ -85,26 +91,33 @@ public class App {
 //    	opencv_core.cvInRangeS(satIpl, opencv_core.cvScalar(0, 0, 0, 0), opencv_core.cvScalar(0, 0, 0, 0), satThreshold);
 //    	opencv_core.cvInRangeS(valIpl, opencv_core.cvScalar(0, 0, 0, 0), opencv_core.cvScalar(0, 0, 0, 0), valThreshold);
 
-    	IplImage rgbThresholdIpl = IplImage.create(rgbIpl.width(), rgbIpl.height(), rgbIpl.depth(), CV_8UC1);
+//    	IplImage rgbThresholdIpl = IplImage.create(rgbIpl.width(), rgbIpl.height(), rgbIpl.depth(), CV_8UC1);
     	IplImage hsvThresholdIpl = IplImage.create(hsvIpl.width(), hsvIpl.height(), hsvIpl.depth(), CV_8UC1);
     	// RGB
-    	opencv_core.cvInRangeS(rgbIpl, opencv_core.cvScalar(40, 80, 50, 0), opencv_core.cvScalar(150, 240, 255, 0), rgbThresholdIpl);
+//    	opencv_core.cvInRangeS(rgbIpl, opencv_core.cvScalar(40, 80, 50, 0), opencv_core.cvScalar(150, 240, 255, 0), rgbThresholdIpl);
     	// HSV
     	opencv_core.cvInRangeS(hsvIpl, opencv_core.cvScalar(20, 25, 100, 0), opencv_core.cvScalar(86, 255, 255, 0), hsvThresholdIpl);
 
     	// Convert to Mat
-    	Mat rgbThresholdMat = opencv_core.cvarrToMat(rgbThresholdIpl);
+//    	Mat rgbThresholdMat = opencv_core.cvarrToMat(rgbThresholdIpl);
     	Mat hsvThresholdMat = opencv_core.cvarrToMat(hsvThresholdIpl);
-    	
+
     	// Apply Smoothing to Binary Images
-    	GaussianBlur(rgbThresholdMat, rgbThresholdMat, new Size(5, 5), 0);
+//    	GaussianBlur(rgbThresholdMat, rgbThresholdMat, new Size(5, 5), 0);
     	GaussianBlur(hsvThresholdMat, hsvThresholdMat, new Size(5, 5), 0);
-    	cvSmooth(rgbThresholdIpl, rgbThresholdIpl);
-    	cvSmooth(hsvThresholdIpl, hsvThresholdIpl);
-    	
+
     	// Combine Images (bitwise AND)
-    	Mat combinedThreshold = new Mat();
-    	bitwise_and(rgbThresholdMat, hsvThresholdMat, combinedThreshold);   	
+//    	Mat combinedThreshold = new Mat();
+//    	bitwise_and(rgbThresholdMat, hsvThresholdMat, combinedThreshold);
+
+    	// Canny Edge Detection
+    	Mat canny = new Mat();
+    	rgbMat.copyTo(canny);
+    	Canny(hsvThresholdMat, canny, 30, 90);
+
+    	// Detect objects
+    	detectContours(canny, rgbMat);
+
 
     	// HSV Channel Frames
 //    	CanvasFrame hueFrame = new CanvasFrame("hue");
@@ -144,23 +157,29 @@ public class App {
 //    	valThresholdFrame.setLocation(1280, 940);
 //    	valThresholdFrame.showImage(converter.convert(valThreshold));
 
-    	CanvasFrame rgbThreshFrame = new CanvasFrame("rgb threshold");
-    	rgbThreshFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-    	rgbThreshFrame.setCanvasScale(0.17);
-    	rgbThreshFrame.setLocation(0, 500);
-    	rgbThreshFrame.showImage(converter.convert(rgbThresholdIpl));
+//    	CanvasFrame rgbThreshFrame = new CanvasFrame("rgb threshold");
+//    	rgbThreshFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+//    	rgbThreshFrame.setCanvasScale(0.17);
+//    	rgbThreshFrame.setLocation(0, 500);
+//    	rgbThreshFrame.showImage(converter.convert(rgbThresholdIpl));
 
     	CanvasFrame hsvThreshFrame = new CanvasFrame("hsv threshold");
     	hsvThreshFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
     	hsvThreshFrame.setCanvasScale(0.17);
-    	hsvThreshFrame.setLocation(640, 500);
+    	hsvThreshFrame.setLocation(0, 500);
     	hsvThreshFrame.showImage(converter.convert(hsvThresholdIpl));
 
-    	CanvasFrame combinedThreshFrame = new CanvasFrame("combined threshold");
-    	combinedThreshFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-    	combinedThreshFrame.setCanvasScale(0.17);
-    	combinedThreshFrame.setLocation(1280, 500);
-    	combinedThreshFrame.showImage(converter.convert(combinedThreshold));
+//    	CanvasFrame combinedThreshFrame = new CanvasFrame("combined threshold");
+//    	combinedThreshFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+//    	combinedThreshFrame.setCanvasScale(0.17);
+//    	combinedThreshFrame.setLocation(1280, 500);
+//    	combinedThreshFrame.showImage(converter.convert(combinedThreshold));
+
+    	CanvasFrame cannyFrame = new CanvasFrame("canny edge detection");
+    	cannyFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+    	cannyFrame.setCanvasScale(0.17);
+    	cannyFrame.setLocation(640, 500);
+    	cannyFrame.showImage(converter.convert(canny));
 
     	// Buttons and Labels
     	JFrame buttonFrame = new JFrame("buttons");
@@ -214,17 +233,34 @@ public class App {
     		rgbMat.copyTo(resultImage);
     		drawSourceCircle(resultImage, xCoord, yCoord);
     		resultFrame.showImage(converter.convert(resultImage));
-    		
+
     		resultImage.release();
     	}
-    	
+
     }
 
-    static void drawSourceCircle(Mat img, int x, int y) {
+    private static void drawSourceCircle(Mat img, int x, int y) {
 
     	Point point = new Point(x, y);
     	circle(img, point, 100, new Scalar(0, 0, 255, 255), 25, 8, 0);
-    	
+
+    }
+
+    private static Mat detectContours(Mat src, Mat dest) {
+
+    	MatVector contours = new MatVector();
+        findContours(src, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
+
+        for (int i = 0; i < contours.sizeof(); i++) {
+        	drawContours(dest, contours, -1, Scalar.BLUE);
+        }
+
+    	return dest;
+    }
+
+    private static void detectCircles(Mat src) {
+
+
     }
 
 }
