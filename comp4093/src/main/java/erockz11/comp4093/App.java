@@ -3,6 +3,8 @@ package erockz11.comp4093;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -19,6 +21,7 @@ import org.bytedeco.javacpp.*;
 import org.bytedeco.javacpp.indexer.*;
 import org.bytedeco.opencv.opencv_core.*;
 import org.bytedeco.opencv.opencv_imgproc.*;
+
 import static org.bytedeco.opencv.global.opencv_core.*;
 import static org.bytedeco.opencv.global.opencv_imgproc.*;
 
@@ -112,11 +115,40 @@ public class App {
 
     	MatVector contours = new MatVector();
         findContours(src, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
-
-        for (int i = 0; i < contours.size(); i++) {
-        	drawContours(dest, contours, -1, Scalar.BLUE);
+        
+        long n = contours.size();
+        
+        Mat[] contoursPoly = new Mat[(int) n];
+//        Rect[] boundRect = new Rect[(int) n];
+        Point2f[] centres = new Point2f[(int) n];
+        float[][] radius = new float[(int) n][1];
+        
+        // Populate arrays
+        for (int i = 0; i < n; i++) {
+//        	Mat contour = contours.get(i);
+//        	Mat points = new Mat();
+//        	approxPolyDP(contour, points, arcLength(contour, true) * 0.02, true);
+//        	drawContours(dest, new MatVector(points), -1, Scalar.BLUE);
+        	
+        	contoursPoly[i] = contours.get(i);
+        	approxPolyDP(contoursPoly[i], new Mat(), arcLength(contoursPoly[i], true) * 0.02, true);
+//        	boundRect[i] = boundingRect(contoursPoly[i]);
+        	centres[i] = new Point2f();
+        	minEnclosingCircle(contoursPoly[i], centres[i], radius[i]);
         }
-
+        
+        // Draw
+        MatVector contoursPolyList = new MatVector();
+        for (Mat poly : contoursPoly) {
+        	contoursPolyList.put(poly);
+        }
+        for (int i = 0; i < n; i++) {
+        	Scalar colour = new Scalar(0, 0, 255, 0);
+        	drawContours(dest, contoursPolyList, -1, colour);
+//        	rectangle(dest, boundRect[i], colour);
+        	circle(dest, new Point((int) centres[i].x(), (int) centres[i].y()), (int) radius[i][0], colour);
+        }
+        
     	return dest;
     }
 
