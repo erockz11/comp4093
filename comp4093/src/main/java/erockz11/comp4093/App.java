@@ -113,7 +113,7 @@ public class App {
     	MatVector contours = new MatVector();
         findContours(src, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
 
-        for (int i = 0; i < contours.sizeof(); i++) {
+        for (int i = 0; i < contours.size(); i++) {
         	drawContours(dest, contours, -1, Scalar.BLUE);
         }
 
