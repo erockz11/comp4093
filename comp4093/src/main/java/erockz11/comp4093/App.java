@@ -38,13 +38,13 @@ public class App {
     	setup();
 
     	// Load image
-    	BufferedImage src = ImageIO.read(new File("resources/images/img14.jpg"));
+    	BufferedImage src = ImageIO.read(new File("resources/images/img10.jpg"));
 
     	// Convert BufferedImage to Mat
     	Mat srcMat = Java2DFrameUtils.toMat(src);
     	int height = srcMat.rows();
     	int width = srcMat.cols();
-
+    	
     	// Source frame
     	display(srcMat, "source", 0, 0, 0.17);
 
@@ -62,17 +62,28 @@ public class App {
     	resultFrame.setLocation(1280, 0);
 
     	// Apply thresholding
-    	Mat hsvThresholdMat = new Mat();
-    	inRange(hsvMat, new Mat(1, 1, CV_32SC4, new Scalar(20, 25, 100, 0)), new Mat(1, 1, CV_32SC4, new Scalar(86, 255, 255, 0)), hsvThresholdMat);
-    	display(hsvThresholdMat, "hsv threshold", 0, 500, 0.17);
+    	Mat hsvThreshold = new Mat();
+    	inRange(hsvMat, new Mat(1, 1, CV_32SC4, new Scalar(20, 25, 100, 0)), new Mat(1, 1, CV_32SC4, new Scalar(86, 255, 255, 0)), hsvThreshold);
+    	display(hsvThreshold, "hsv threshold", 640, 500, 0.17);
+    	
+    	Mat rgbThreshold = new Mat();
+    	inRange(srcMat, new Mat(1, 1, CV_32SC4, new Scalar(85, 140, 10, 0)), new Mat(1, 1, CV_32SC4, new Scalar(190, 210, 220, 0)), rgbThreshold);
+    	display(rgbThreshold, "rgb threshold", 0, 500, 0.17);
 
     	// Apply smoothing
-    	GaussianBlur(hsvThresholdMat, hsvThresholdMat, new Size(5, 5), 0);
+//    	GaussianBlur(hsvThreshold, hsvThreshold, new Size(5, 5), 0);
+//    	GaussianBlur(rgbThreshold, rgbThreshold, new Size(5, 5), 0);
 
+    	// Bitwise AND
+    	Mat combinedThreshold = new Mat();
+    	bitwise_and(rgbThreshold, hsvThreshold, combinedThreshold);
+    	display(combinedThreshold, "bitwise AND", 1280, 500, 0.17);
+    	
     	// Canny edge detection
     	Mat canny = new Mat();
-    	Canny(hsvThresholdMat, canny, 30, 90);
-    	display(canny, "canny edge detection", 640, 500, 0.17);
+    	Canny(combinedThreshold, canny, 30, 90);
+//    	Canny(hsvThreshold, canny, 30, 90);
+    	display(canny, "canny edge detection", 1920, 500, 0.17);
 
     	// Detect objects
     	detectContours(canny, srcMat);
