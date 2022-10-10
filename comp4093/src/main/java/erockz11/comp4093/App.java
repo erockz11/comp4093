@@ -38,7 +38,7 @@ public class App {
     	setup();
 
     	// Load image
-    	BufferedImage src = ImageIO.read(new File("resources/images/img10.jpg"));
+    	BufferedImage src = ImageIO.read(new File("resources/images/cropped/img8.jpg"));
 
     	// Convert BufferedImage to Mat
     	Mat srcMat = Java2DFrameUtils.toMat(src);
@@ -46,44 +46,40 @@ public class App {
     	int width = srcMat.cols();
     	
     	// Source frame
-    	display(srcMat, "source", 0, 0, 0.17);
+    	display(srcMat, "source", 0, 0, 0.25);
 
     	// Convert to HSV
     	Mat hsvMat = new Mat(height, width);
     	cvtColor(srcMat, hsvMat, COLOR_RGB2HSV);
 
     	// HSV frame
-    	display(hsvMat, "hsv", 640, 0, 0.17);
+    	display(hsvMat, "hsv", 640, 0, 0.25);
 
     	// Result frame
     	CanvasFrame resultFrame = new CanvasFrame("result");
     	resultFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-    	resultFrame.setCanvasScale(0.17);
+    	resultFrame.setCanvasScale(0.25);
     	resultFrame.setLocation(1280, 0);
 
     	// Apply thresholding
     	Mat hsvThreshold = new Mat();
     	inRange(hsvMat, new Mat(1, 1, CV_32SC4, new Scalar(20, 25, 100, 0)), new Mat(1, 1, CV_32SC4, new Scalar(86, 255, 255, 0)), hsvThreshold);
-    	display(hsvThreshold, "hsv threshold", 640, 500, 0.17);
+    	display(hsvThreshold, "hsv threshold", 640, 500, 0.25);
     	
     	Mat rgbThreshold = new Mat();
     	inRange(srcMat, new Mat(1, 1, CV_32SC4, new Scalar(85, 140, 10, 0)), new Mat(1, 1, CV_32SC4, new Scalar(190, 210, 220, 0)), rgbThreshold);
-    	display(rgbThreshold, "rgb threshold", 0, 500, 0.17);
-
-    	// Apply smoothing
-//    	GaussianBlur(hsvThreshold, hsvThreshold, new Size(5, 5), 0);
-//    	GaussianBlur(rgbThreshold, rgbThreshold, new Size(5, 5), 0);
+    	display(rgbThreshold, "rgb threshold", 0, 500, 0.25);
 
     	// Bitwise AND
     	Mat combinedThreshold = new Mat();
     	bitwise_and(rgbThreshold, hsvThreshold, combinedThreshold);
-    	display(combinedThreshold, "bitwise AND", 1280, 500, 0.17);
+    	display(combinedThreshold, "bitwise AND", 1280, 500, 0.25);
     	
     	// Canny edge detection
     	Mat canny = new Mat();
     	Canny(combinedThreshold, canny, 30, 90);
 //    	Canny(hsvThreshold, canny, 30, 90);
-    	display(canny, "canny edge detection", 1920, 500, 0.17);
+    	display(canny, "canny edge detection", 1920, 500, 0.25);
 
     	// Detect objects
     	detectContours(canny, srcMat);
@@ -101,6 +97,7 @@ public class App {
 
     		// Deallocate memory to prevent memory leaks
     		resultImage.release();
+    		
     	}
     }
 
@@ -130,37 +127,37 @@ public class App {
         long n = contours.size();
 
         Mat[] contoursPoly = new Mat[(int) n];
-//        Rect[] boundRect = new Rect[(int) n];
         Point2f[] centres = new Point2f[(int) n];
         float[][] radius = new float[(int) n][1];
 
         // Populate arrays
         for (int i = 0; i < n; i++) {
-//        	Mat contour = contours.get(i);
-//        	Mat points = new Mat();
-//        	approxPolyDP(contour, points, arcLength(contour, true) * 0.02, true);
-//        	drawContours(dest, new MatVector(points), -1, Scalar.BLUE);
 
         	contoursPoly[i] = contours.get(i);
         	approxPolyDP(contoursPoly[i], new Mat(), arcLength(contoursPoly[i], true) * 0.02, true);
-//        	boundRect[i] = boundingRect(contoursPoly[i]);
         	centres[i] = new Point2f();
         	minEnclosingCircle(contoursPoly[i], centres[i], radius[i]);
+        	
         }
 
         // Draw
         MatVector contoursPolyList = new MatVector();
         for (Mat poly : contoursPoly) {
+        	
         	contoursPolyList.put(poly);
+        	
         }
+        
         for (int i = 0; i < n; i++) {
+        	
         	Scalar colour = new Scalar(0, 0, 255, 0);
         	drawContours(dest, contoursPolyList, -1, colour);
-//        	rectangle(dest, boundRect[i], colour);
         	circle(dest, new Point((int) centres[i].x(), (int) centres[i].y()), (int) radius[i][0], colour);
+        	
         }
 
     	return dest;
+    	
     }
 
     private static void setupSpinner(int width, int height) {
