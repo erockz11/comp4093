@@ -38,7 +38,7 @@ public class App {
     	setup();
 
     	// Load image
-    	BufferedImage src = ImageIO.read(new File("resources/images/cropped/img8.jpg"));
+    	BufferedImage src = ImageIO.read(new File("resources/images/cropped/img14.jpg"));
 
     	// Convert BufferedImage to Mat
     	Mat srcMat = Java2DFrameUtils.toMat(src);
@@ -66,19 +66,19 @@ public class App {
     	inRange(hsvMat, new Mat(1, 1, CV_32SC4, new Scalar(20, 25, 100, 0)), new Mat(1, 1, CV_32SC4, new Scalar(86, 255, 255, 0)), hsvThreshold);
     	display(hsvThreshold, "hsv threshold", 640, 500, 0.25);
     	
-    	Mat rgbThreshold = new Mat();
-    	inRange(srcMat, new Mat(1, 1, CV_32SC4, new Scalar(85, 140, 10, 0)), new Mat(1, 1, CV_32SC4, new Scalar(190, 210, 220, 0)), rgbThreshold);
-    	display(rgbThreshold, "rgb threshold", 0, 500, 0.25);
+//    	Mat rgbThreshold = new Mat();
+//    	inRange(srcMat, new Mat(1, 1, CV_32SC4, new Scalar(85, 140, 10, 0)), new Mat(1, 1, CV_32SC4, new Scalar(190, 210, 220, 0)), rgbThreshold);
+//    	display(rgbThreshold, "rgb threshold", 0, 500, 0.25);
 
     	// Bitwise AND
-    	Mat combinedThreshold = new Mat();
-    	bitwise_and(rgbThreshold, hsvThreshold, combinedThreshold);
-    	display(combinedThreshold, "bitwise AND", 1280, 500, 0.25);
+//    	Mat combinedThreshold = new Mat();
+//    	bitwise_and(rgbThreshold, hsvThreshold, combinedThreshold);
+//    	display(combinedThreshold, "bitwise AND", 1280, 500, 0.25);
     	
     	// Canny edge detection
     	Mat canny = new Mat();
-    	Canny(combinedThreshold, canny, 30, 90);
-//    	Canny(hsvThreshold, canny, 30, 90);
+//    	Canny(combinedThreshold, canny, 30, 90);
+    	Canny(hsvThreshold, canny, 30, 90);
     	display(canny, "canny edge detection", 1920, 500, 0.25);
 
     	// Detect objects
