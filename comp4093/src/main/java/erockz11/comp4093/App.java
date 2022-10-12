@@ -3,8 +3,6 @@ package erockz11.comp4093;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -30,8 +28,10 @@ public class App {
 
 	private static final ToIplImage converter = new ToIplImage();
 
-	static int xCoord = 100;
-	static int yCoord = 100;
+	static int xCoord = 50;
+	static int yCoord = 50;
+	static float[][] circles;
+	static int order[];
 
     public static void main(String[] args) throws IOException {
 
@@ -58,7 +58,7 @@ public class App {
     	// Result frame
     	CanvasFrame resultFrame = new CanvasFrame("result");
     	resultFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-    	resultFrame.setCanvasScale(0.25);
+    	resultFrame.setCanvasScale(0.8);
     	resultFrame.setLocation(1280, 0);
 
     	// Apply thresholding
@@ -76,13 +76,14 @@ public class App {
 //    	display(combinedThreshold, "bitwise AND", 1280, 500, 0.25);
     	
     	// Canny edge detection
-    	Mat canny = new Mat();
+//    	Mat canny = new Mat();
 //    	Canny(combinedThreshold, canny, 30, 90);
-    	Canny(hsvThreshold, canny, 30, 90);
-    	display(canny, "canny edge detection", 1920, 500, 0.25);
+//    	Canny(hsvThreshold, canny, 30, 90);
+//    	display(canny, "canny edge detection", 1920, 500, 0.25);
 
     	// Detect objects
-    	detectContours(canny, srcMat);
+//    	detectContours(canny, srcMat);
+    	detectContours(hsvThreshold, srcMat);
 
     	// Buttons and labels
     	setupSpinner(width, height);
@@ -93,6 +94,7 @@ public class App {
     		Mat resultImage = new Mat();
     		srcMat.copyTo(resultImage);
     		drawSourceCircle(resultImage, xCoord, yCoord);
+    		drawPath(resultImage, new int[]{4,3,2,1});
     		resultFrame.showImage(converter.convert(resultImage));
 
     		// Deallocate memory to prevent memory leaks
@@ -130,7 +132,7 @@ public class App {
         Point2f[] centres = new Point2f[(int) n];
         float[][] radius = new float[(int) n][1];
 
-        // Populate arrays
+        // Get the centres and radii of minimum enclosing circles of contours in the image
         for (int i = 0; i < n; i++) {
 
         	contoursPoly[i] = contours.get(i);
@@ -139,23 +141,65 @@ public class App {
         	minEnclosingCircle(contoursPoly[i], centres[i], radius[i]);
         	
         }
-
-        // Draw
-        MatVector contoursPolyList = new MatVector();
-        for (Mat poly : contoursPoly) {
-        	
-        	contoursPolyList.put(poly);
-        	
-        }
+        
+        // Map the centres and radii or minimum enclosing circles of contours in the image to a single 2D array
+        float circles2D[][] = new float[(int) n][3];
+        int count = 0;
         
         for (int i = 0; i < n; i++) {
         	
-        	Scalar colour = new Scalar(0, 0, 255, 0);
-        	drawContours(dest, contoursPolyList, -1, colour);
-        	circle(dest, new Point((int) centres[i].x(), (int) centres[i].y()), (int) radius[i][0], colour);
+        	// Minimum radius and screen position cutoff
+        	if (radius[i][0] > 8.0 && centres[i].y() < 800) {
+        		
+        		circles2D[i][0] = centres[i].x();
+        		circles2D[i][1] = centres[i].y();
+        		circles2D[i][2] = radius[i][0];
+        		count++;
+        		
+        	}
         	
         }
-
+        
+        // Remove empty elements
+        circles = new float[count][3];
+        int idx = 0;
+        
+        for (int i = 0; i < n; i++) {
+        	
+        	if (circles2D[i][0] != 0.0 || circles2D[i][1] != 0.0 || circles2D[i][2] != 0.0) {
+        		
+        		circles[idx][0] = circles2D[i][0];
+        		circles[idx][1] = circles2D[i][1];
+        		circles[idx][2] = circles2D[i][2];
+        		idx++;
+        		
+        	}
+        	
+        }
+               
+        // Draw        
+        Scalar colour = new Scalar(0, 0, 255, 0);
+        int circleCounter = 1;
+        for (int i = 0; i < circles.length; i++) {
+        	String s = String.valueOf(circleCounter);
+        	circle(dest, new Point((int) circles[i][0], (int) circles[i][1]), (int) circles[i][2], colour, 2, 8, 0);
+        	putText(dest, s, new Point((int) circles[i][0], (int) circles[i][1]), FONT_HERSHEY_PLAIN, 5.0, colour, 4, 8, false);
+        	circleCounter++;
+        }
+        
+        // Debug
+//        System.out.println("'circles2D' array:");
+//        for (int i = 0; i < n; i++) {
+//        	System.out.println("x: " + circles2D[i][0] + "   \t" + "y: " + circles2D[i][1] + "\t" + "radius: " + circles2D[i][2]);
+//        }
+//        System.out.println("count: " + count);
+//        System.out.println("'circles' array:");
+//        for (int i = 0; i < idx; i++) {
+//        	System.out.println("x: " + circles[i][0] + "   \t" + "y: " + circles[i][1] + "\t" + "radius: " + circles[i][2]);
+//        }
+//        System.out.println("index: " + idx);
+//        System.out.println("circles size: " + circles.length);
+        
     	return dest;
     	
     }
@@ -208,7 +252,30 @@ public class App {
     private static void drawSourceCircle(Mat img, int x, int y) {
 
     	Point point = new Point(x, y);
-    	circle(img, point, 100, new Scalar(0, 0, 255, 255), 25, 8, 0);
+    	circle(img, point, 50, new Scalar(0, 0, 255, 255), 10, 8, 0);
 
     }
+    
+    private static void drawPath(Mat img, int[] arr) {
+    	   	
+    	// Digits in order -1 in order to match array index
+    	for (int i = 0; i < arr.length; i++) {
+    		arr[i] = arr[i] - 1;
+    	}
+    	
+    	// Draw
+    	Scalar colour = new Scalar(0, 255, 0, 0);
+    	for(int i = 0; i < arr.length - 1; i++) {
+    		
+    		if (i == 0) {
+    			line(img, new Point(xCoord, yCoord), new Point((int) circles[arr[i]][0], (int) circles[arr[i]][1]), colour, 3, 8, 0);
+    		} else {
+    			line(img, new Point((int) circles[arr[i-1]][0], (int) circles[arr[i-1]][1]), new Point((int) circles[arr[i]][0], (int) circles[arr[i]][1]), colour, 3, 8, 0);
+    		}
+    		
+    	}
+    	
+    	
+    }
+    
 }
