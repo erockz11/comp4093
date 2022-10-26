@@ -210,7 +210,7 @@ public class App {
 
     private static void setupButtons(int width, int height) {
 
-    	JFrame buttonFrame = new JFrame("buttons");
+    	JFrame buttonFrame = new JFrame("User Input");
     	buttonFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
     	buttonFrame.setSize(300, 400);
     	buttonFrame.setLocation(1920, 150);
