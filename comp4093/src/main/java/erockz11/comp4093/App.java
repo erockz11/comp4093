@@ -1,13 +1,17 @@
 package erockz11.comp4093;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
@@ -15,10 +19,7 @@ import javax.swing.event.ChangeListener;
 
 import org.bytedeco.javacv.*;
 import org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage;
-import org.bytedeco.javacpp.*;
-import org.bytedeco.javacpp.indexer.*;
 import org.bytedeco.opencv.opencv_core.*;
-import org.bytedeco.opencv.opencv_imgproc.*;
 
 import static org.bytedeco.opencv.global.opencv_core.*;
 import static org.bytedeco.opencv.global.opencv_imgproc.*;
@@ -30,8 +31,9 @@ public class App {
 
 	static int xCoord = 50;
 	static int yCoord = 50;
-	static float[][] circles;
+	static float[][] circles;	// circles[i][0] = x, circles[i][1] = y, circles[i][2] = radius
 	static int order[];
+	static boolean showPath = false;
 
     public static void main(String[] args) throws IOException {
 
@@ -86,7 +88,7 @@ public class App {
     	detectContours(hsvThreshold, srcMat);
 
     	// Buttons and labels
-    	setupSpinner(width, height);
+    	setupButtons(width, height);
 
     	// Main loop
     	while (true) {
@@ -94,7 +96,7 @@ public class App {
     		Mat resultImage = new Mat();
     		srcMat.copyTo(resultImage);
     		drawSourceCircle(resultImage, xCoord, yCoord);
-    		drawPath(resultImage, new int[]{4,3,2,1});
+    		drawPath(resultImage, order, showPath);
     		resultFrame.showImage(converter.convert(resultImage));
 
     		// Deallocate memory to prevent memory leaks
@@ -148,8 +150,8 @@ public class App {
 
         for (int i = 0; i < n; i++) {
 
-        	// Minimum radius and screen position cutoff
-        	if (radius[i][0] > 8.0 && centres[i].y() < 800) {
+        	// Cull circles based on radius and/or screen position
+        	if (radius[i][0] > 8.0) {
 
         		circles2D[i][0] = centres[i].x();
         		circles2D[i][1] = centres[i].y();
@@ -200,16 +202,20 @@ public class App {
 //        System.out.println("index: " + idx);
 //        System.out.println("circles size: " + circles.length);
 
+        System.out.println("Number of circles: " + circles.length);
+        
     	return dest;
 
     }
 
-    private static void setupSpinner(int width, int height) {
+    private static void setupButtons(int width, int height) {
 
     	JFrame buttonFrame = new JFrame("buttons");
-    	buttonFrame.setSize(300, 300);
+    	buttonFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+    	buttonFrame.setSize(300, 400);
     	buttonFrame.setLocation(1920, 150);
 
+    	// Set up spinners
     	final JLabel xLabel = new JLabel();
     	xLabel.setHorizontalAlignment(JLabel.CENTER);
     	xLabel.setBounds(0, 0, 250, 100);
@@ -246,6 +252,30 @@ public class App {
     		}
     	});
     	
+    	// Set up text box and button
+    	final JLabel pathLabel = new JLabel();
+    	pathLabel.setText("Laser Path: ");
+    	pathLabel.setBounds(20,165,250,100);
+    	buttonFrame.add(pathLabel);
+    	
+    	final JTextField path = new JTextField("e.g. 1,2,3,4");
+    	path.setBounds(100, 200, 100, 30);
+    	buttonFrame.add(path);
+    	
+    	JButton pathButton = new JButton("Show Path");
+    	pathButton.setBounds(100,250,100,30);
+    	buttonFrame.add(pathButton);
+    	pathButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setOrder(path.getText());
+				showPath = !showPath;
+				System.out.println("Path: " + path.getText());
+				System.out.println("showPath: " + showPath);
+				
+			}
+    	});
+    	
     	buttonFrame.setLayout(null);
     	buttonFrame.setVisible(true);
 
@@ -254,30 +284,47 @@ public class App {
     private static void drawSourceCircle(Mat img, int x, int y) {
 
     	Point point = new Point(x, y);
-    	circle(img, point, 50, new Scalar(0, 0, 255, 255), 10, 8, 0);
+    	circle(img, point, 50, new Scalar(255, 0, 255, 255), 10, 8, 0);
+    	putText(img, "source", new Point(x + 60, y), FONT_HERSHEY_PLAIN, 2.0, new Scalar(255, 0, 255, 255), 4, 8, false);
 
     }
 
-    private static void drawPath(Mat img, int[] arr) {
+    private static void drawPath(Mat img, int[] arr, boolean state) {
 
-    	// Digits in order -1 in order to match array index
-    	for (int i = 0; i < arr.length; i++) {
-    		arr[i] = arr[i] - 1;
+    	if (state == true) {
+    		
+    		int temp[] = new int[arr.length];
+    		
+    		// Digits in order -1 in order to match array index
+        	for (int i = 0; i < arr.length; i++) {
+        		temp[i] = arr[i] - 1;
+        	}
+
+        	// Draw
+        	Scalar colour = new Scalar(0, 255, 0, 0);
+        	Point previous = new Point(xCoord, yCoord);
+        	
+        	for(int i = 0; i < temp.length; i++) {
+        		line(img, previous, new Point((int) circles[temp[i]][0], (int) circles[temp[i]][1]), colour, 3, 8, 0);
+        		previous = new Point((int) circles[temp[i]][0], (int) circles[temp[i]][1]);
+        	}
+        	
+        	
     	}
 
-    	// Draw
-    	Scalar colour = new Scalar(0, 255, 0, 0);
-    	for(int i = 0; i < arr.length - 1; i++) {
 
-    		if (i == 0) {
-    			line(img, new Point(xCoord, yCoord), new Point((int) circles[arr[i]][0], (int) circles[arr[i]][1]), colour, 3, 8, 0);
-    		} else {
-    			line(img, new Point((int) circles[arr[i-1]][0], (int) circles[arr[i-1]][1]), new Point((int) circles[arr[i]][0], (int) circles[arr[i]][1]), colour, 3, 8, 0);
-    		}
-
+    }
+    
+    private static void setOrder(String path) {
+    	
+    	String[] arr = path.split(",", -1);
+    	int size = arr.length;
+    	order = new int[size];
+    	
+    	for(int i = 0; i < arr.length; i++) {
+    		order[i] = Integer.parseInt(arr[i]);
     	}
-
-
+    	
     }
 
 }
