@@ -31,7 +31,7 @@ public class App {
 
 	static int xCoord = 50;
 	static int yCoord = 50;
-	static float[][] circles;	// circles[i][0] = x, circles[i][1] = y, circles[i][2] = radius
+	static float[][] circles;	// circles[i][0] = centre x value, circles[i][1] = centre y value, circles[i][2] = radius
 	static int order[];
 	static boolean showPath = false;
 
@@ -40,7 +40,7 @@ public class App {
     	setup();
 
     	// Load image
-    	BufferedImage src = ImageIO.read(new File("resources/images/cropped/img14.jpg"));
+    	BufferedImage src = ImageIO.read(new File("resources/images/cropped/img19.jpg"));
 
     	// Convert BufferedImage to Mat
     	Mat srcMat = Java2DFrameUtils.toMat(src);
@@ -55,37 +55,66 @@ public class App {
     	cvtColor(srcMat, hsvMat, COLOR_RGB2HSV);
 
     	// HSV frame
-    	display(hsvMat, "hsv", 640, 0, 0.25);
+    	display(hsvMat, "hsv", 853, 0, 0.3);
 
     	// Result frame
     	CanvasFrame resultFrame = new CanvasFrame("result");
     	resultFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-    	resultFrame.setCanvasScale(0.8);
-    	resultFrame.setLocation(1280, 0);
+    	resultFrame.setCanvasScale(0.4);
+    	resultFrame.setLocation(0, 300);
 
+    	// Split channels
+    	MatVector hsvChannels = new MatVector();
+    	split(hsvMat, hsvChannels);
+//    	display(hsvChannels.get(0), "hue", 0, 300, 0.25);
+//    	display(hsvChannels.get(1), "sat", 853, 300, 0.25);
+//    	display(hsvChannels.get(2), "val", 1706, 300, 0.25);
+    	
     	// Apply thresholding
-    	Mat hsvThreshold = new Mat();
-    	inRange(hsvMat, new Mat(1, 1, CV_32SC4, new Scalar(20, 25, 100, 0)), new Mat(1, 1, CV_32SC4, new Scalar(86, 255, 255, 0)), hsvThreshold);
-    	display(hsvThreshold, "hsv threshold", 640, 500, 0.25);
+//    	Mat hsvThreshold = new Mat();			// Binarise HSV
+//    	inRange(hsvMat, new Mat(1, 1, CV_32SC4, new Scalar(20, 25, 100, 0)), new Mat(1, 1, CV_32SC4, new Scalar(86, 255, 255, 0)), hsvThreshold);
+//    	display(hsvThreshold, "hsv threshold", 853, 380, 0.3);
 
-//    	Mat rgbThreshold = new Mat();
+//    	Mat rgbThreshold = new Mat();			// Binarise RGB
 //    	inRange(srcMat, new Mat(1, 1, CV_32SC4, new Scalar(85, 140, 10, 0)), new Mat(1, 1, CV_32SC4, new Scalar(190, 210, 220, 0)), rgbThreshold);
-//    	display(rgbThreshold, "rgb threshold", 0, 500, 0.25);
+//    	display(rgbThreshold, "rgb threshold", 0, 380, 0.25);
+    	
+    	Mat hueThreshold = new Mat();			// Binarise HSV channels
+    	Mat satThreshold = new Mat();
+    	Mat valThreshold = new Mat();
+    	inRange(hsvChannels.get(0), new Mat(1, 1, CV_32SC4, new Scalar(40, 0, 0, 0)), new Mat(1, 1, CV_32SC4, new Scalar(60, 0, 0, 0)), hueThreshold);
+    	inRange(hsvChannels.get(1), new Mat(1, 1, CV_32SC4, new Scalar(100, 0, 0, 0)), new Mat(1, 1, CV_32SC4, new Scalar(240, 0, 0, 0)), satThreshold);
+    	inRange(hsvChannels.get(2), new Mat(1, 1, CV_32SC4, new Scalar(100, 0, 0, 0)), new Mat(1, 1, CV_32SC4, new Scalar(255, 0, 0, 0)), valThreshold);
+//    	display(hueThreshold, "hue threshold", 0, 800, 0.25);
+//    	display(satThreshold, "sat threshold", 853, 800, 0.25);
+//    	display(valThreshold, "val threshold", 1706, 800, 0.25);
 
-    	// Bitwise AND
-//    	Mat combinedThreshold = new Mat();
-//    	bitwise_and(rgbThreshold, hsvThreshold, combinedThreshold);
-//    	display(combinedThreshold, "bitwise AND", 1280, 500, 0.25);
+    	// Bitwise AND   	
+    	Mat hsvL = new Mat();			// Combine HSV channel thresholds
+    	Mat hsvR = new Mat();
+    	Mat hsvAND = new Mat();
+    	bitwise_and(hueThreshold, satThreshold, hsvL);
+    	bitwise_and(satThreshold, valThreshold, hsvR);
+    	bitwise_and(hsvL, hsvR, hsvAND);
+    	display(hsvAND, "combined hsv threshold", 1706, 800, 0.4);
+    	
+//    	Mat combinedThreshold = new Mat();		// Combine RGB and HSV channel thresholds
+//    	bitwise_and(rgbThreshold, hsvAND, combinedThreshold);
+//    	display(combinedThreshold, "rgb AND hsv", 1706, 380, 0.25);
 
     	// Canny edge detection
 //    	Mat canny = new Mat();
 //    	Canny(combinedThreshold, canny, 30, 90);
 //    	Canny(hsvThreshold, canny, 30, 90);
-//    	display(canny, "canny edge detection", 1920, 500, 0.25);
+//    	Canny(hsvAND, canny, 30, 90);
+//    	display(canny, "canny edge detection", 1920, 500, 0.4);
 
     	// Detect objects
-//    	detectContours(canny, srcMat);
-    	detectContours(hsvThreshold, srcMat);
+//    	detectContours(canny, srcMat);						// Canny Edge Image
+//    	detectContours(rgbThreshold, srcMat);				// RGB Image
+//    	detectContours(hsvThreshold, srcMat);				// HSV Image
+    	detectContours(hsvAND, srcMat);						// Combined HSV channels
+//    	detectContours(combinedThreshold, srcMat);			// Combined RGB and HSV channels
 
     	// Buttons and labels
     	setupButtons(width, height);
@@ -95,7 +124,7 @@ public class App {
 
     		Mat resultImage = new Mat();
     		srcMat.copyTo(resultImage);
-    		drawSourceCircle(resultImage, xCoord, yCoord);
+//    		drawSourceCircle(resultImage, xCoord, yCoord);
     		drawPath(resultImage, order, showPath);
     		resultFrame.showImage(converter.convert(resultImage));
 
@@ -108,6 +137,7 @@ public class App {
 
     private static void setup() {
 
+    	// Remove limit on memory usage
     	System.setProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
         System.setProperty("org.bytedeco.javacpp.maxbytes", "0");
 
@@ -122,7 +152,7 @@ public class App {
     	canvas.showImage(converter.convert(img));
 
     }
-
+    
     private static Mat detectContours(Mat src, Mat dest) {
 
     	MatVector contours = new MatVector();
@@ -284,7 +314,7 @@ public class App {
     private static void drawSourceCircle(Mat img, int x, int y) {
 
     	Point point = new Point(x, y);
-    	circle(img, point, 50, new Scalar(255, 0, 255, 255), 10, 8, 0);
+    	circle(img, point, 50, new Scalar(255, 0, 255, 0), 10, 8, 0);
     	putText(img, "source", new Point(x + 60, y), FONT_HERSHEY_PLAIN, 2.0, new Scalar(255, 0, 255, 255), 4, 8, false);
 
     }
