@@ -42,26 +42,30 @@ public class App {
     	// Load image
     	BufferedImage src = ImageIO.read(new File("resources/images/cropped/img19.jpg"));
 
+//    	// Performance Test
+//    	Mat test = new Mat(1, 1, CV_8UC1);
+//    	display(test, "test window", 2500, 1400, 1);
+
     	// Convert BufferedImage to Mat
     	Mat srcMat = Java2DFrameUtils.toMat(src);
     	int height = srcMat.rows();
     	int width = srcMat.cols();
 
     	// Source frame
-    	display(srcMat, "source", 0, 0, 0.25);
+//    	display(srcMat, "source", 0, 0, 0.25);
 
     	// Convert to HSV
     	Mat hsvMat = new Mat(height, width);
     	cvtColor(srcMat, hsvMat, COLOR_RGB2HSV);
 
     	// HSV frame
-    	display(hsvMat, "hsv", 853, 0, 0.3);
+//    	display(hsvMat, "hsv", 853, 0, 0.25);
 
     	// Result frame
     	CanvasFrame resultFrame = new CanvasFrame("result");
     	resultFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-    	resultFrame.setCanvasScale(0.4);
-    	resultFrame.setLocation(0, 300);
+    	resultFrame.setCanvasScale(0.8);
+    	resultFrame.setLocation(853, 1000);
 
     	// Split channels
     	MatVector hsvChannels = new MatVector();
@@ -69,7 +73,7 @@ public class App {
 //    	display(hsvChannels.get(0), "hue", 0, 300, 0.25);
 //    	display(hsvChannels.get(1), "sat", 853, 300, 0.25);
 //    	display(hsvChannels.get(2), "val", 1706, 300, 0.25);
-    	
+
     	// Apply thresholding
 //    	Mat hsvThreshold = new Mat();			// Binarise HSV
 //    	inRange(hsvMat, new Mat(1, 1, CV_32SC4, new Scalar(20, 25, 100, 0)), new Mat(1, 1, CV_32SC4, new Scalar(86, 255, 255, 0)), hsvThreshold);
@@ -78,26 +82,26 @@ public class App {
 //    	Mat rgbThreshold = new Mat();			// Binarise RGB
 //    	inRange(srcMat, new Mat(1, 1, CV_32SC4, new Scalar(85, 140, 10, 0)), new Mat(1, 1, CV_32SC4, new Scalar(190, 210, 220, 0)), rgbThreshold);
 //    	display(rgbThreshold, "rgb threshold", 0, 380, 0.25);
-    	
+
     	Mat hueThreshold = new Mat();			// Binarise HSV channels
     	Mat satThreshold = new Mat();
     	Mat valThreshold = new Mat();
     	inRange(hsvChannels.get(0), new Mat(1, 1, CV_32SC4, new Scalar(40, 0, 0, 0)), new Mat(1, 1, CV_32SC4, new Scalar(60, 0, 0, 0)), hueThreshold);
     	inRange(hsvChannels.get(1), new Mat(1, 1, CV_32SC4, new Scalar(100, 0, 0, 0)), new Mat(1, 1, CV_32SC4, new Scalar(240, 0, 0, 0)), satThreshold);
     	inRange(hsvChannels.get(2), new Mat(1, 1, CV_32SC4, new Scalar(100, 0, 0, 0)), new Mat(1, 1, CV_32SC4, new Scalar(255, 0, 0, 0)), valThreshold);
-//    	display(hueThreshold, "hue threshold", 0, 800, 0.25);
-//    	display(satThreshold, "sat threshold", 853, 800, 0.25);
-//    	display(valThreshold, "val threshold", 1706, 800, 0.25);
+//    	display(hueThreshold, "hue threshold", 0, 500, 0.25);
+//    	display(satThreshold, "sat threshold", 853, 500, 0.25);
+//    	display(valThreshold, "val threshold", 1706, 500, 0.25);
 
-    	// Bitwise AND   	
+    	// Bitwise AND
     	Mat hsvL = new Mat();			// Combine HSV channel thresholds
     	Mat hsvR = new Mat();
     	Mat hsvAND = new Mat();
     	bitwise_and(hueThreshold, satThreshold, hsvL);
     	bitwise_and(satThreshold, valThreshold, hsvR);
     	bitwise_and(hsvL, hsvR, hsvAND);
-    	display(hsvAND, "combined hsv threshold", 1706, 800, 0.4);
-    	
+//    	display(hsvAND, "combined hsv threshold", 0, 1000, 0.25);
+
 //    	Mat combinedThreshold = new Mat();		// Combine RGB and HSV channel thresholds
 //    	bitwise_and(rgbThreshold, hsvAND, combinedThreshold);
 //    	display(combinedThreshold, "rgb AND hsv", 1706, 380, 0.25);
@@ -124,7 +128,7 @@ public class App {
 
     		Mat resultImage = new Mat();
     		srcMat.copyTo(resultImage);
-//    		drawSourceCircle(resultImage, xCoord, yCoord);
+    		drawSourceCircle(resultImage, xCoord, yCoord);
     		drawPath(resultImage, order, showPath);
     		resultFrame.showImage(converter.convert(resultImage));
 
@@ -152,7 +156,7 @@ public class App {
     	canvas.showImage(converter.convert(img));
 
     }
-    
+
     private static Mat detectContours(Mat src, Mat dest) {
 
     	MatVector contours = new MatVector();
@@ -233,7 +237,7 @@ public class App {
 //        System.out.println("circles size: " + circles.length);
 
         System.out.println("Number of circles: " + circles.length);
-        
+
     	return dest;
 
     }
@@ -243,7 +247,7 @@ public class App {
     	JFrame buttonFrame = new JFrame("User Input");
     	buttonFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
     	buttonFrame.setSize(300, 400);
-    	buttonFrame.setLocation(1920, 150);
+    	buttonFrame.setLocation(2000, 0);
 
     	// Set up spinners
     	final JLabel xLabel = new JLabel();
@@ -281,17 +285,17 @@ public class App {
     			System.out.println("y = " + yCoord);
     		}
     	});
-    	
+
     	// Set up text box and button
     	final JLabel pathLabel = new JLabel();
     	pathLabel.setText("Laser Path: ");
     	pathLabel.setBounds(20,165,250,100);
     	buttonFrame.add(pathLabel);
-    	
+
     	final JTextField path = new JTextField("e.g. 1,2,3,4");
     	path.setBounds(100, 200, 100, 30);
     	buttonFrame.add(path);
-    	
+
     	JButton pathButton = new JButton("Show Path");
     	pathButton.setBounds(100,250,100,30);
     	buttonFrame.add(pathButton);
@@ -302,10 +306,10 @@ public class App {
 				showPath = !showPath;
 				System.out.println("Path: " + path.getText());
 				System.out.println("showPath: " + showPath);
-				
+
 			}
     	});
-    	
+
     	buttonFrame.setLayout(null);
     	buttonFrame.setVisible(true);
 
@@ -322,9 +326,9 @@ public class App {
     private static void drawPath(Mat img, int[] arr, boolean state) {
 
     	if (state == true) {
-    		
+
     		int temp[] = new int[arr.length];
-    		
+
     		// Digits in order -1 in order to match array index
         	for (int i = 0; i < arr.length; i++) {
         		temp[i] = arr[i] - 1;
@@ -333,28 +337,28 @@ public class App {
         	// Draw
         	Scalar colour = new Scalar(0, 255, 0, 0);
         	Point previous = new Point(xCoord, yCoord);
-        	
+
         	for(int i = 0; i < temp.length; i++) {
         		line(img, previous, new Point((int) circles[temp[i]][0], (int) circles[temp[i]][1]), colour, 3, 8, 0);
         		previous = new Point((int) circles[temp[i]][0], (int) circles[temp[i]][1]);
         	}
-        	
-        	
+
+
     	}
 
 
     }
-    
+
     private static void setOrder(String path) {
-    	
+
     	String[] arr = path.split(",", -1);
     	int size = arr.length;
     	order = new int[size];
-    	
+
     	for(int i = 0; i < arr.length; i++) {
     		order[i] = Integer.parseInt(arr[i]);
     	}
-    	
+
     }
 
 }
