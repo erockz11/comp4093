@@ -320,6 +320,7 @@ public class App {
     	Point point = new Point(x, y);
     	circle(img, point, 50, new Scalar(255, 0, 255, 0), 10, 8, 0);
     	putText(img, "source", new Point(x + 60, y), FONT_HERSHEY_PLAIN, 2.0, new Scalar(255, 0, 255, 255), 4, 8, false);
+    	point.deallocate();
 
     }
 
@@ -343,6 +344,7 @@ public class App {
         		previous = new Point((int) circles[temp[i]][0], (int) circles[temp[i]][1]);
         	}
 
+        	previous.deallocate();
 
     	}
 
