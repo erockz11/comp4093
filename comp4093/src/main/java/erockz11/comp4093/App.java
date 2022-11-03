@@ -353,6 +353,7 @@ public class App {
 
     private static void setOrder(String path) {
 
+    	// Parse string separated by commas into array
     	String[] arr = path.split(",", -1);
     	int size = arr.length;
     	order = new int[size];
